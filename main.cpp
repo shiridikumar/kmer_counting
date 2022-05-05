@@ -2,22 +2,30 @@
 #include <bits/stdc++.h>
 #include <ctime>
 #include <pthread.h>
+#include <omp.h>
 
 using namespace std;
 
 string DNA_sequence;
 map<string, int> kmer;
 int k = 4;
-void *thread_call(void* i){
-    long tid;
-     tid = (long)i;
-    cout<<"ehllo "<<tid <<endl;
+void thread_call(){
+    int tid=omp_get_thread_num();
+    cout<<tid<<"*********"<<endl;
+    // cout<<"ehllo "<<tid <<endl;
     int base=tid;
-    for(int i=0;i<DNA_sequence.length();i+=k){
+    for(int i=base;i<100000;i+=k){
         kmer[DNA_sequence.substr(i,k)]+=1;
     }
     cout<<kmer.size()<<"***********"<<endl;
-    return 0;
+    int count=0;
+    for(auto it=kmer.begin();it!=kmer.end();it++){
+        cout<<(*it).first<<" " <<tid<<endl;
+        count+=1;
+        if(count==5){
+            break;
+        }
+    }
 }
 
 
@@ -53,14 +61,16 @@ int main(int argc, char **argv)
 
     pthread_t threads[100];
     pthread_t ptid;
+    #pragma omp parallel for
     for(int i=0;i<k;i++){
-         pthread_create(&threads[i], NULL, thread_call, (void *)i);
+         thread_call();
     }
-    for(int i=0;i<k;i++){
-         pthread_join(threads[i], NULL);
-    }
+    // for(int i=0;i<k;i++){
+    //     pthread_join(threads[i], NULL);
+    //     pthread_exit(NULL);
+    // }
     time(&end);
-    cout << (double)(end-start) << endl;
+    // cout << (double)(end-start) << endl;
    
 
     // int rc;
