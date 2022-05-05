@@ -14,20 +14,19 @@ void thread_call(){
     cout<<tid<<"*********"<<endl;
     // cout<<"ehllo "<<tid <<endl;
     int base=tid;
-    for(int i=base;i<100000;i+=k){
+    for(int i=base;i<DNA_sequence.length();i+=k){
         kmer[DNA_sequence.substr(i,k)]+=1;
     }
     cout<<kmer.size()<<"***********"<<endl;
     int count=0;
-    for(auto it=kmer.begin();it!=kmer.end();it++){
-        cout<<(*it).first<<" " <<tid<<endl;
-        count+=1;
-        if(count==5){
-            break;
-        }
-    }
+    // for(auto it=kmer.begin();it!=kmer.end();it++){
+    //     cout<<(*it).first<<" " <<tid<<endl;
+    //     count+=1;
+    //     if(count==5){
+    //         break;
+    //     }
+    // }
 }
-
 
 int main(int argc, char **argv)
 {
@@ -70,7 +69,7 @@ int main(int argc, char **argv)
     //     pthread_exit(NULL);
     // }
     time(&end);
-    // cout << (double)(end-start) << endl;
+    cout << (double)(end-start) << endl;
    
 
     // int rc;
