@@ -2,7 +2,9 @@
 #include <bits/stdc++.h>
 #include <ctime>
 #include <pthread.h>
+#include <stdlib.h>
 #include <omp.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -11,7 +13,7 @@ map<string, int> kmer;
 int k = 4;
 void thread_call(){
     int tid=omp_get_thread_num();
-    cout<<tid<<"*********"<<endl;
+    cout<<tid<<"*********"<<getppid()<<endl;
     // cout<<"ehllo "<<tid <<endl;
     int base=tid;
     for(int i=base;i<DNA_sequence.length();i+=k){
