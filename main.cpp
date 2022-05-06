@@ -12,20 +12,18 @@ string DNA_sequence;
 map<string, int> kmer;
 int k = 4;
 void *thread_call(void * ids){
-    long id=(long)ids;
-    int tid=(int)id;
-    int base=tid;
+    int base = *((int*)ids);
     int prev;
     uint32_t ret;
     for(int i=base;i<=DNA_sequence.length()-k;i+=k){
         string seq=DNA_sequence.substr(i,k);
         prev=kmer[seq];
-        while(1){
-            prev=kmer[seq];
-            ret=__sync_val_compare_and_swap ((int *)&kmer[seq], prev, prev+1);
-            if(ret==prev){
-                break;
-            }
+        
+        ret=__sync_val_compare_and_swap (&kmer[seq], prev, prev+1);
+        while(ret != prev)
+        {
+            prev=ret;
+            ret=__sync_val_compare_and_swap (&kmer[seq], prev, prev+1);
         }
         // cout<<"correct update"<<endl;
     }
@@ -74,16 +72,25 @@ int main(int argc, char **argv)
     cout<<"Parllelizeing using pthreads **************"<<endl<<endl;
     kmer.clear();
     totalkmer=0;
+
+
     time(&start);
     pthread_t threads[k];
-    pthread_t ptid;
-    for(int i=0;i<k;i++){
-         pthread_create(&threads[i], NULL, thread_call,(void *)i );
-    }
-    for(int i=0;i<k;i++){
+    int Arguments[k];
+    for(int i = 0; i < k; i++)
+        Arguments[i] = i;
+
+
+    for(int i=0;i<k;i++)
+        pthread_create(&threads[i], NULL, thread_call,(void *)&Arguments[i]);
+    
+    for(int i=0;i<k;i++)
         pthread_join(threads[i], NULL);
-    }
+
     time(&end);
+
+
+
       for(auto it=kmer.begin();it!=kmer.end();it++){
         totalkmer+=(*it).second;
     }
