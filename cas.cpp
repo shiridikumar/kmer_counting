@@ -24,7 +24,7 @@ void *myFunc(void * a )
     uint32_t masterDeserialize=uint32_t(master);
   
     unsigned int tid = pthread_self();
-    __asm__ __volatile__ ("" ::: "memory");
+    // __asm__ __volatile__ ("" ::: "memory");
     int y=0;
     for(int i=0;i<10000;i++){
         y+=i;
@@ -37,11 +37,11 @@ void *myFunc(void * a )
     if(retMaster==0){
         cout<<"Race condition occured and wrong value updated while adding " <<master<<endl;
     }
-    // while(retMaster==0){
+    while(retMaster==0){
       
-    //     prev=final;
-    //     retMaster= __sync_bool_compare_and_swap (&final, prev, prev+master);
-    // }
+        prev=final;
+        retMaster= __sync_bool_compare_and_swap (&final, prev, prev+master);
+    }
  
 
 
