@@ -10,24 +10,26 @@ using namespace std;
 
 string DNA_sequence;
 map<string, int> kmer;
-int k = 4;
-void thread_call(){
-    int tid=omp_get_thread_num();
-    cout<<tid<<"*********"<<getppid()<<endl;
-    // cout<<"ehllo "<<tid <<endl;
+int k = 8;
+void *thread_call(void * ids){
+    long id=(long)ids;
+    int tid=(int)id;
     int base=tid;
-    for(int i=base;i<DNA_sequence.length();i+=k){
-        kmer[DNA_sequence.substr(i,k)]+=1;
+    int prev;
+    uint32_t ret;
+    for(int i=base;i<=DNA_sequence.length()-k;i+=k){
+        string seq=DNA_sequence.substr(i,k);
+        prev=kmer[seq];
+        while(1){
+            prev=kmer[seq];
+            ret=__sync_val_compare_and_swap ((int *)&kmer[seq], prev, prev+1);
+            if(ret==prev){
+                break;
+            }
+
+        }
+        // cout<<"correct update"<<endl;
     }
-    cout<<kmer.size()<<"***********"<<endl;
-    int count=0;
-    // for(auto it=kmer.begin();it!=kmer.end();it++){
-    //     cout<<(*it).first<<" " <<tid<<endl;
-    //     count+=1;
-    //     if(count==5){
-    //         break;
-    //     }
-    // }
 }
 
 int main(int argc, char **argv)
@@ -49,30 +51,39 @@ int main(int argc, char **argv)
             DNA_sequence += line;
         }
     }
-     time_t start, end;
+     time_t start, end,mid;
      time(&start);
 
-    // for (int i = 0; i < DNA_sequence.length(); i ++)
+    // **************************************** Without multithreading ***************************************************
+    // cout<<"Serial access without parallelizing"<<endl;
+    // for (int i = 0; i <= DNA_sequence.length()-k; i ++)
     // {
     //     // cout<<DNA_sequence.substr(i,k)<<endl;
     //     kmer[DNA_sequence.substr(i, k)] += 1;
     // }
-    // cout << kmer.size() << endl;
-    // cout << (float)(clock() - start) / CLOCKS_PER_SEC << endl;
+    // time(&mid);
+    int totalkmer=0;
 
-    pthread_t threads[100];
-    pthread_t ptid;
-    #pragma omp parallel for
-    for(int i=0;i<k;i++){
-         thread_call();
-    }
-    // for(int i=0;i<k;i++){
-    //     pthread_join(threads[i], NULL);
-    //     pthread_exit(NULL);
+
+    // for(auto it=kmer.begin();it!=kmer.end();it++){
+    //     totalkmer+=(*it).second;
     // }
+    // cout<<(double)(mid-start)<<","<<kmer.size()<<","<<totalkmer<<endl;
+    // cout<<"Parllelizeing using pthreads **************"<<endl<<endl;
+    // kmer.clear();
+    totalkmer=0;
+    time(&start);
+    pthread_t threads[k];
+    pthread_t ptid;
+    for(int i=0;i<k;i++){
+         pthread_create(&threads[i], NULL, thread_call,(void *)i );
+    }
+    for(int i=0;i<k;i++){
+        pthread_join(threads[i], NULL);
+    }
     time(&end);
-    cout << (double)(end-start) << endl;
-   
-
-    // int rc;
+      for(auto it=kmer.begin();it!=kmer.end();it++){
+        totalkmer+=(*it).second;
+    }
+    cout<<(double)(end-start)<<","<<kmer.size()<<","<<totalkmer<<endl;
 }
