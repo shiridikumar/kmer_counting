@@ -26,7 +26,6 @@ void *thread_call(void * ids){
             if(ret==prev){
                 break;
             }
-
         }
         // cout<<"correct update"<<endl;
     }
@@ -55,22 +54,22 @@ int main(int argc, char **argv)
      time(&start);
 
     // **************************************** Without multithreading ***************************************************
-    // cout<<"Serial access without parallelizing"<<endl;
-    // for (int i = 0; i <= DNA_sequence.length()-k; i ++)
-    // {
-    //     // cout<<DNA_sequence.substr(i,k)<<endl;
-    //     kmer[DNA_sequence.substr(i, k)] += 1;
-    // }
-    // time(&mid);
+    cout<<"Serial access without parallelizing"<<endl;
+    for (int i = 0; i <= DNA_sequence.length()-k; i ++)
+    {
+        // cout<<DNA_sequence.substr(i,k)<<endl;
+        kmer[DNA_sequence.substr(i, k)] += 1;
+    }
+    time(&mid);
     int totalkmer=0;
 
 
-    // for(auto it=kmer.begin();it!=kmer.end();it++){
-    //     totalkmer+=(*it).second;
-    // }
-    // cout<<(double)(mid-start)<<","<<kmer.size()<<","<<totalkmer<<endl;
-    // cout<<"Parllelizeing using pthreads **************"<<endl<<endl;
-    // kmer.clear();
+    for(auto it=kmer.begin();it!=kmer.end();it++){
+        totalkmer+=(*it).second;
+    }
+    cout<<(double)(mid-start)<<","<<kmer.size()<<","<<totalkmer<<endl;
+    cout<<"Parllelizeing using pthreads **************"<<endl<<endl;
+    kmer.clear();
     totalkmer=0;
     time(&start);
     pthread_t threads[k];
