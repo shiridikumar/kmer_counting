@@ -41,7 +41,3 @@ National Library of Medicine
 info@ncbi.nlm.nih.gov
 
 
-
-## Current code
-- DNA string does it conaint new line characters?
-- Asumming entire data fits in main-memory!
