@@ -10,32 +10,27 @@ using namespace std;
 
 string DNA_sequence;
 map<string, int> kmer;
+map<string, pthread_spinlock_t> kmerlocks;
+
 int k = 8;
-int Num_Threads = 8;
 
-void *thread_call(void * id)
+void *thread_call(void * ids)
 {
-    int I, start, end, prev, ret;
-    I = *((int*)id);
+    int base = *((int*)ids);
+    int prev, ret;
 
-    start = I * (DNA_sequence.length() / Num_Threads);
-    if(I == Num_Threads - 1)
-        end = DNA_sequence.length() - k + 1;
-    else
-        end = (I + 1) * (DNA_sequence.length() / Num_Threads);
-
-
-    for(int i=start; i<end ; i++)
+    for(int i=base; i<=DNA_sequence.length() - k; i+=k)
     {
         string seq=DNA_sequence.substr(i,k);
-        prev=kmer[seq];
-        
-        ret= __sync_val_compare_and_swap(&kmer[seq], prev, prev+1);
-        while(ret != prev)
+        int ret = pthread_spin_trylock(&kmerlocks[seq]);
+        prev = kmer[seq];
+        while (ret != 0)
         {
-            prev=ret;
-            ret= __sync_val_compare_and_swap(&kmer[seq], prev, prev+1);
+            prev = kmer[seq];
+            ret = pthread_spin_trylock(&kmerlocks[seq]); //__sync_bool_compare_and_swap(&kmer[seq], prev, prev + 1);
         }
+        kmer[seq]+=1;
+        pthread_spin_unlock(&kmerlocks[seq]);  
     }
 }
 
@@ -64,27 +59,28 @@ int main(int argc, char **argv)
     time_t start, end;
     time(&start);
 
-
     int MaxLen = DNA_sequence.length() - k;
+    int totalkmer=0;
 
     for (int i = 0; i <= MaxLen; i ++)
+    {
         kmer[DNA_sequence.substr(i, k)] = 0;
-
-
+        pthread_spin_init(&kmerlocks[DNA_sequence.substr(i, k)], 1);
+    }
 
 
     
     //time(&start);
-    pthread_t threads[Num_Threads];
-    int Arguments[Num_Threads];
-    for(int i = 0; i <Num_Threads; i++)
+    pthread_t threads[k];
+    int Arguments[k];
+    for(int i = 0; i < k; i++)
         Arguments[i] = i;
 
 
-    for(int i=0; i<Num_Threads ; i++)
+    for(int i=0; i<k ; i++)
         pthread_create(&threads[i], NULL, thread_call,(void *)&Arguments[i]);
     
-    for(int i=0; i<Num_Threads; i++)
+    for(int i=0; i<k; i++)
         pthread_join(threads[i], NULL);
 
     time(&end);
@@ -94,7 +90,6 @@ int main(int argc, char **argv)
 
 
     int size = 0;
-    int totalkmer = 0;
     for(auto it=kmer.begin();it!=kmer.end();it++)
     {
         totalkmer+=(*it).second;
