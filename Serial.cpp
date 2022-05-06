@@ -31,19 +31,36 @@ int main(int argc, char **argv)
             DNA_sequence += line;
     }
 
+
+
+
+
     time_t start, end;
     time(&start);
 
+    int MaxLen = DNA_sequence.length() - k;
+
+    #pragma omp parallel for
+    for (int i = 0; i <= MaxLen; i ++)
+        kmer[DNA_sequence.substr(i, k)] = 0;
+
+
+
+
 
     cout<<"Serial access without parallelizing"<<endl;
-    for (int i = 0; i <= DNA_sequence.length()-k; i ++)
+    for (int i = 0; i <= MaxLen; i ++)
     {
         kmer[DNA_sequence.substr(i, k)] += 1;
     }
     time(&end);
+
+
+
+
+
+
     int totalkmer=0;
-
-
     int size = 0;
     for(auto it=kmer.begin();it!=kmer.end();it++){
         totalkmer+=(*it).second;

@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     int MaxLen = DNA_sequence.length() - k;
     int totalkmer=0;
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i <= MaxLen; i ++)
         kmer[DNA_sequence.substr(i, k)] = 0;
 

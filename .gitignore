@@ -2,3 +2,4 @@ dataset/
 a.out
 *.txt
 .vscode
+*.ex
