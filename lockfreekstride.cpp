@@ -10,8 +10,8 @@ using namespace std;
 
 string DNA_sequence;
 map<string, int> kmer;
-int k = 4;
-
+int k = 8;
+int Init_N = 8;
 
 void *thread_call(void * ids)
 {
@@ -30,6 +30,22 @@ void *thread_call(void * ids)
             ret= __sync_val_compare_and_swap(&kmer[seq], prev, prev+1);
         }
     }
+}
+
+
+void *Init_hash(void* id)
+{
+    int I, start, end;
+    I = *((int*)id);
+
+    start = I * (DNA_sequence.length() / Init_N);
+    if(I == Init_N - 1)
+        end = DNA_sequence.length() - k;
+    else
+        end = (I + 1) * (DNA_sequence.length() / Init_N);
+
+    for(int i = start; i < end; i++)
+        kmer[DNA_sequence.substr(i, k)] = 0;
 }
 
 int main(int argc, char **argv)
@@ -59,14 +75,23 @@ int main(int argc, char **argv)
     int MaxLen = DNA_sequence.length() - k;
     int totalkmer=0;
 
-    #pragma omp parallel for
-    for (int i = 0; i <= MaxLen; i ++)
-        kmer[DNA_sequence.substr(i, k)] = 0;
+
+    
+    pthread_t thread_in[Init_N];
+    int Arguments_in[Init_N];
+    for(int i = 0; i < Init_N; i++)
+        Arguments_in[i] = i;
+
+
+    for(int i=0; i< Init_N ; i++)
+        pthread_create(&threads_in[i], NULL, Init_hash,(void *)&Arguments_in[i]);
+    
+    for(int i=0; i< Init_N; i++)
+        pthread_join(threads_in[i], NULL);
 
 
 
-
-
+    
     //time(&start);
     pthread_t threads[k];
     int Arguments[k];

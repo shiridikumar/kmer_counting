@@ -10,7 +10,7 @@ using namespace std;
 
 string DNA_sequence;
 map<string, int> kmer;
-int k = 4;
+int k = 8;
 
 
 int main(int argc, char **argv)
@@ -40,7 +40,6 @@ int main(int argc, char **argv)
 
     int MaxLen = DNA_sequence.length() - k;
 
-    #pragma omp parallel for
     for (int i = 0; i <= MaxLen; i ++)
         kmer[DNA_sequence.substr(i, k)] = 0;
 
