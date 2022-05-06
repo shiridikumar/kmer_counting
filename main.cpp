@@ -10,7 +10,7 @@ using namespace std;
 
 string DNA_sequence;
 map<string, int> kmer;
-int k = 8;
+int k = 4;
 void *thread_call(void * ids){
     long id=(long)ids;
     int tid=(int)id;
@@ -39,25 +39,25 @@ int main(int argc, char **argv)
         std::cerr << "Error opening: " << argv[1];
         return -1;
     }
-    string line, id;
+
+    string line;
     while (std::getline(input, line))
     {
-        if (line.empty())
+        if (line.empty() || line[0] == '>')
             continue;
-
-        if (line[0] != '>')
-        {
+        else
             DNA_sequence += line;
-        }
     }
-     time_t start, end,mid;
-     time(&start);
+
+    time_t start, end,mid;
+    time(&start);
+
+
 
     // **************************************** Without multithreading ***************************************************
     cout<<"Serial access without parallelizing"<<endl;
     for (int i = 0; i <= DNA_sequence.length()-k; i ++)
     {
-        // cout<<DNA_sequence.substr(i,k)<<endl;
         kmer[DNA_sequence.substr(i, k)] += 1;
     }
     time(&mid);
@@ -68,6 +68,9 @@ int main(int argc, char **argv)
         totalkmer+=(*it).second;
     }
     cout<<(double)(mid-start)<<","<<kmer.size()<<","<<totalkmer<<endl;
+
+
+    // **************************************** with multithreading ***************************************************
     cout<<"Parllelizeing using pthreads **************"<<endl<<endl;
     kmer.clear();
     totalkmer=0;
