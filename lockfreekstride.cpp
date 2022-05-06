@@ -11,21 +11,24 @@ using namespace std;
 string DNA_sequence;
 map<string, int> kmer;
 int k = 4;
-void *thread_call(void * ids){
+
+
+void *thread_call(void * ids)
+{
     int base = *((int*)ids);
-    int prev;
-    uint32_t ret;
-    for(int i=base;i<=DNA_sequence.length()-k;i+=k){
+    int prev, ret;
+
+    for(int i=base; i<=DNA_sequence.length() - k; i+=k)
+    {
         string seq=DNA_sequence.substr(i,k);
         prev=kmer[seq];
         
-        ret=__sync_val_compare_and_swap (&kmer[seq], prev, prev+1);
+        ret= __sync_val_compare_and_swap(&kmer[seq], prev, prev+1);
         while(ret != prev)
         {
             prev=ret;
-            ret=__sync_val_compare_and_swap (&kmer[seq], prev, prev+1);
+            ret= __sync_val_compare_and_swap(&kmer[seq], prev, prev+1);
         }
-        // cout<<"correct update"<<endl;
     }
 }
 
@@ -50,8 +53,6 @@ int main(int argc, char **argv)
     time_t start, end,mid;
     time(&start);
 
-
-
     // **************************************** Without multithreading ***************************************************
     cout<<"Serial access without parallelizing"<<endl;
     for (int i = 0; i <= DNA_sequence.length()-k; i ++)
@@ -62,10 +63,13 @@ int main(int argc, char **argv)
     int totalkmer=0;
 
 
+    int size = 0;
     for(auto it=kmer.begin();it!=kmer.end();it++){
         totalkmer+=(*it).second;
+        if((*it).second != 0)
+            size++;
     }
-    cout<<(double)(mid-start)<<","<<kmer.size()<<","<<totalkmer<<endl;
+    cout<<(double)(mid-start)<<","<<size<<","<<totalkmer<<endl;
 
 
     // **************************************** with multithreading ***************************************************
@@ -81,18 +85,20 @@ int main(int argc, char **argv)
         Arguments[i] = i;
 
 
-    for(int i=0;i<k;i++)
+    for(int i=0; i<k ; i++)
         pthread_create(&threads[i], NULL, thread_call,(void *)&Arguments[i]);
     
-    for(int i=0;i<k;i++)
+    for(int i=0; i<k; i++)
         pthread_join(threads[i], NULL);
 
     time(&end);
 
 
-
+      size = 0;
       for(auto it=kmer.begin();it!=kmer.end();it++){
         totalkmer+=(*it).second;
+        if((*it).second != 0)
+            size++;
     }
-    cout<<(double)(end-start)<<","<<kmer.size()<<","<<totalkmer<<endl;
+    cout<<(double)(end-start)<<","<<size<<","<<totalkmer<<endl;
 }
