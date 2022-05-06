@@ -11,14 +11,20 @@ using namespace std;
 string DNA_sequence;
 map<string, int> kmer;
 int k = 8;
-int Init_N = 2;
 
-void *thread_call(void * ids)
+void *thread_call(void * id)
 {
-    int base = *((int*)ids);
-    int prev, ret;
+    int I, start, end, prev, ret;
+    I = *((int*)id);
 
-    for(int i=base; i<=DNA_sequence.length() - k; i+=k)
+    start = I * (DNA_sequence.length() / Num_Threads);
+    if(I == Num_Threads - 1)
+        end = DNA_sequence.length() - k + 1;
+    else
+        end = (I + 1) * (DNA_sequence.length() / Num_Threads);
+
+
+    for(int i=start; i<end ; i++)
     {
         string seq=DNA_sequence.substr(i,k);
         prev=kmer[seq];
@@ -32,29 +38,6 @@ void *thread_call(void * ids)
     }
 }
 
-
-void *Init_hash(void* id)
-{
-    int I, start, end;
-    I = *((int*)id);
-    cout << I << "Hello her" << endl;
-
-    start = I * (DNA_sequence.length() / Init_N);
-    if(I == Init_N - 1)
-        end = DNA_sequence.length() - k + 1;
-    else
-        end = (I + 1) * (DNA_sequence.length() / Init_N);
-
-    cout << I << "stat " << start << " " << end << endl;
-
-    //for(int i = start; i < end; i++)
-    for(int i = 0; i < 1000; i++)
-    {    
-        //cout << "working";
-        kmer[DNA_sequence.substr(i, k)] = 0;
-    }
-    cout << I << "Bye hlkj" << endl;
-}
 
 int main(int argc, char **argv)
 {
@@ -80,38 +63,27 @@ int main(int argc, char **argv)
     time_t start, end;
     time(&start);
 
+
     int MaxLen = DNA_sequence.length() - k;
-    int totalkmer=0;
-    // cout<<"parlllele"<<endl;
+
+    for (int i = 0; i <= MaxLen; i ++)
+        kmer[DNA_sequence.substr(i, k)] = 0;
+
+
 
 
     
-    pthread_t threads_in[Init_N];
-    int Arguments_in[Init_N];
-    for(int i = 0; i < Init_N; i++)
-        Arguments_in[i] = i;
-
-    for(int i=0; i< Init_N ; i++)
-        pthread_create(&threads_in[i], NULL, Init_hash,(void *)&Arguments_in[i]);
-    
-    //printf("Merring unsuccesful checking agin\n");
-
-    for(int i=0; i< Init_N; i++)
-        pthread_join(threads_in[i], NULL);
-    //printf("Merring succesful\n");
-    
-   
-
-    pthread_t threads[k];
-    int Arguments[k];
-    for(int i = 0; i < k; i++)
+    //time(&start);
+    pthread_t threads[Num_Threads];
+    int Arguments[Num_Threads];
+    for(int i = 0; i <Num_Threads; i++)
         Arguments[i] = i;
 
 
-    for(int i=0; i<k ; i++)
+    for(int i=0; i<Num_Threads ; i++)
         pthread_create(&threads[i], NULL, thread_call,(void *)&Arguments[i]);
     
-    for(int i=0; i<k; i++)
+    for(int i=0; i<Num_Threads; i++)
         pthread_join(threads[i], NULL);
 
     time(&end);
@@ -121,6 +93,7 @@ int main(int argc, char **argv)
 
 
     int size = 0;
+    int totalkmer = 0;
     for(auto it=kmer.begin();it!=kmer.end();it++)
     {
         totalkmer+=(*it).second;
