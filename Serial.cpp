@@ -9,8 +9,8 @@
 using namespace std;
 
 string DNA_sequence;
-map<string, int> kmer;
-int k = 8;
+unordered_map<string, int> kmer;
+int k = 12;
 
 
 int main(int argc, char **argv)

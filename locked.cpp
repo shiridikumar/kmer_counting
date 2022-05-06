@@ -9,8 +9,8 @@
 using namespace std;
 
 string DNA_sequence;
-map<string, int> kmer;
-map<string, pthread_spinlock_t> kmerlocks;
+unordered_map<string, int> kmer;
+unordered_map<string, pthread_spinlock_t> kmerlocks;
 
 int k = 8;
 

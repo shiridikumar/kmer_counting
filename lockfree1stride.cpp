@@ -9,8 +9,9 @@
 using namespace std;
 
 string DNA_sequence;
-map<string, int> kmer;
-int k = 8;
+unordered_map<string, int> kmer;
+int k = 12;
+int Num_Threads = 8;
 
 void *thread_call(void * id)
 {
