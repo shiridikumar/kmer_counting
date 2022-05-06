@@ -20,7 +20,7 @@ void *thread_call(void * id)
 
     start = I * (DNA_sequence.length() / Num_Threads);
     if(I == Num_Threads - 1)
-        end = DNA_sequence.length() - k;
+        end = DNA_sequence.length() - k + 1;
     else
         end = (I + 1) * (DNA_sequence.length() / Num_Threads);
 
