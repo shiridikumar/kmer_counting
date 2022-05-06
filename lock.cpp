@@ -12,20 +12,8 @@ string DNA_sequence;
 map<string, int> kmer1;
 map<string, int> kmer;
 vector<string> strings;
-pthread_mutex_t *threadlocks;
-pthread_cond_t *kmer_waits;
+map<string, pthread_spinlock_t> kmerlocks;
 int k = 6;
-void *initialize(void *ids){
-    long id = (long)ids;
-    int tid = (int)id;
-    int base =tid;
-    for(int i=base;i<=DNA_sequence.length()-k;i+=k){
-        kmer[DNA_sequence.substr(i,k)]=0;
-        if(tid==5){
-            cout<<kmer.size()<<endl;
-        }
-    }
-}
 void *thread_call(void *ids)
 {
     long id = (long)ids;
@@ -33,17 +21,19 @@ void *thread_call(void *ids)
     int base = tid;
     int prev;
     uint32_t ret;
-    for (int i = base; i <=DNA_sequence.length() - k; i += k)
+    for (int i = base; i <= DNA_sequence.length() - k; i += k)
     {
         // cout<<i<<endl;
         string seq = DNA_sequence.substr(i, k);
+        int ret = pthread_spin_trylock(&kmerlocks[seq]);
         prev = kmer[seq];
-        ret = __sync_bool_compare_and_swap(&kmer[seq], prev, prev + 1);
-        while (ret == 0)
+        while (ret != 0)
         {
             prev = kmer[seq];
-            ret = __sync_bool_compare_and_swap(&kmer[seq], prev, prev + 1);
+            ret = pthread_spin_trylock(&kmerlocks[seq]); //__sync_bool_compare_and_swap(&kmer[seq], prev, prev + 1);
         }
+        kmer[seq]+=1;
+        pthread_spin_unlock(&kmerlocks[seq]);
     }
 }
 
@@ -70,30 +60,18 @@ int main(int argc, char **argv)
     time(&start);
 
     // **************************************** Without multithreading ***************************************************
-    // cout << "Serial access without parallelizing"<<endl;
-    // for (int i = 0; i <=DNA_sequence.length() - k; i++)
-    // {
-    //     kmer1[DNA_sequence.substr(i, k)] += 1;
-        
-    // }
-    // kmer_wait=(pthread_mutex_t *)malloc()
-        // kmer_waits=(pthread_cond_t *)malloc(kmer.size()*sizeof(pthread_cond_t));
-
-
-    // cout<<"loop finsihed"<<endl;
-    // cout << omp_get_max_threads() << "***************" << endl;
-
-
-#pragma omp for
+    cout << "Serial access without parallelizing" << endl;
     for (int i = 0; i <= DNA_sequence.length() - k; i++)
     {
+        // kmer1[DNA_sequence.substr(i, k)] += 1;
         kmer[DNA_sequence.substr(i, k)] = 0;
+        pthread_spin_init(&kmerlocks[DNA_sequence.substr(i, k)], 1);
     }
-
-    // cout<<"pragma finished"<<endl;
     time(&mid);
-    int totalkmer = 0;
 
+    // kmerlocks=(pthread_spinlock_t *)malloc(kmer.size()*sizeof(pthread_spinlock_t));
+
+    int totalkmer = 0;
     for (auto it = kmer1.begin(); it != kmer1.end(); it++)
     {
         totalkmer += (*it).second;
@@ -104,22 +82,17 @@ int main(int argc, char **argv)
     time(&start);
     // kmer.clear();
 
-    pthread_t threads[k];
-    // pthread_t parllels[k];
+    pthread_t threads[8];
+    pthread_t parllels[8];
     // cout<<"hedda"<<endl;
-    //  for (int i = 0; i < k; i++)
+    //  for (int i = 0; i < 8; i++)
     // {
     //     pthread_create(&parllels[i], NULL, initialize, (void *)i);
     // }
-    //  for (int i = 0; i < k; i++)
+    //  for (int i = 0; i < 8; i++)
     // {
     //     pthread_join(parllels[i], NULL);
     // }
-    // cout<<"zeros genrated"<<endl;
-
-
-
-
 
     for (int i = 0; i < k; i++)
     {
