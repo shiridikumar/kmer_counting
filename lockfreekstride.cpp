@@ -50,35 +50,24 @@ int main(int argc, char **argv)
             DNA_sequence += line;
     }
 
-    time_t start, end,mid;
+
+
+
+    time_t start, end;
     time(&start);
 
-    // **************************************** Without multithreading ***************************************************
-    cout<<"Serial access without parallelizing"<<endl;
-    for (int i = 0; i <= DNA_sequence.length()-k; i ++)
-    {
-        kmer[DNA_sequence.substr(i, k)] += 1;
-    }
-    time(&mid);
+    int MaxLen = DNA_sequence.length() - k;
     int totalkmer=0;
 
-
-    int size = 0;
-    for(auto it=kmer.begin();it!=kmer.end();it++){
-        totalkmer+=(*it).second;
-        if((*it).second != 0)
-            size++;
-    }
-    cout<<(double)(mid-start)<<","<<size<<","<<totalkmer<<endl;
+    //#pragma omp parallel for
+    for (int i = 0; i <= MaxLen; i ++)
+        kmer[DNA_sequence.substr(i, k)] = 0;
 
 
-    // **************************************** with multithreading ***************************************************
-    cout<<"Parllelizeing using pthreads **************"<<endl<<endl;
-    kmer.clear();
-    totalkmer=0;
 
 
-    time(&start);
+
+    //time(&start);
     pthread_t threads[k];
     int Arguments[k];
     for(int i = 0; i < k; i++)
@@ -94,8 +83,12 @@ int main(int argc, char **argv)
     time(&end);
 
 
-      size = 0;
-      for(auto it=kmer.begin();it!=kmer.end();it++){
+
+
+
+    int size = 0;
+    for(auto it=kmer.begin();it!=kmer.end();it++)
+    {
         totalkmer+=(*it).second;
         if((*it).second != 0)
             size++;
